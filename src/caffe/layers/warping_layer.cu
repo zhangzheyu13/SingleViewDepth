@@ -28,21 +28,21 @@ __global__ void WarpingForward(const int nthreads,
 
     
     if(x1 < 0 || x1 > width-1 || y1 < 0 || y1 > height-1 || x2 < 0 || x2 > width-1 || y2 < 0 || y2 > height-1 ){
-	for (int cc = 0; cc<channels; cc++){
-	     int off =  (n*channels +  cc)*height*width;
+  for (int cc = 0; cc<channels; cc++){
+       int off =  (n*channels +  cc)*height*width;
              top_data[w + h * width +off] = 0;// index of a perticular r/g/b pixel in image:  h * width + w + (n*channels +  cc)*height*width
-	}
+  }
     }
     else{
-	//for every channel
-	for (int cc = 0; cc<channels; cc++){	
-	  int off =  (n*channels +  cc)*height*width;
-	  float I_in_x_y1, I_in_x_y2, I_in_xy;
+  //for every channel
+  for (int cc = 0; cc<channels; cc++){  
+    int off =  (n*channels +  cc)*height*width;
+    float I_in_x_y1, I_in_x_y2, I_in_xy;
           I_in_x_y1 = (float(x2)-xx) * I[x1 + y1 *width + off] +  (xx-(float)x1) * I[x2 + y1 * width + off];// I_in_x_y1 /= (x2-x1);
           I_in_x_y2 = (float(x2)-xx) * I[x1 + y2 * width + off] +  (xx-(float)x1) * I[x2 + y2 * width + off];// I_in_x_y2 /= (x2-x1);  
           I_in_xy = (float(y2)-yy) * I_in_x_y1 + (yy-float(y1)) * I_in_x_y2; //I_in_xy /= (y2-y1);
-	  top_data[w + h * width +off] =  I_in_xy;
-	}           
+    top_data[w + h * width +off] =  I_in_xy;
+  }           
     }
   }
 }
@@ -92,16 +92,16 @@ __global__ void WarpingBackward(const int nthreads, const Dtype* const top_diff,
 
     //  h == v == y; w == u == x; // 
    
-    	for (int cc = 0; cc<channels; cc++){
+      for (int cc = 0; cc<channels; cc++){
                  int off =  (n*channels +  cc)*height*width;
 
-		 if(x1 >= 0 && x1 <= width-1 && x2 >= 0 && x2 <= width-1  )    
-	        	gradient_u += top_diff[w+ h * width  + off] *
-				0.5*(top_data[x1 + h * width +off] - top_data[x2 + h * width +off]);
-		 if( y1 >= 0 && y1 <= height-1 &&  y2 >= 0 && y2 <= height-1 )
-		 	gradient_v += top_diff[w + h * width +off] *
-				0.5*(top_data[w + y1 * width +off] - top_data[w + y2 * width +off]);
-	}
+     if(x1 >= 0 && x1 <= width-1 && x2 >= 0 && x2 <= width-1  )    
+            gradient_u += top_diff[w+ h * width  + off] *
+        0.5*(top_data[x1 + h * width +off] - top_data[x2 + h * width +off]);
+     if( y1 >= 0 && y1 <= height-1 &&  y2 >= 0 && y2 <= height-1 )
+      gradient_v += top_diff[w + h * width +off] *
+        0.5*(top_data[w + y1 * width +off] - top_data[w + y2 * width +off]);
+  }
     
 
     u_diff[index] = gradient_u;
@@ -116,7 +116,7 @@ void WarpingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   
   if (propagate_down[0])
-	CHECK_EQ(1,0)<<"The input image needs to be data";
+  CHECK_EQ(1,0)<<"The input image needs to be data";
 
   const Dtype* top_diff = top[0]->gpu_diff();
   Dtype* u_diff = bottom[1]->mutable_gpu_diff();

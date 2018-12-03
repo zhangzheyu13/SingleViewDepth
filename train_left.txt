@@ -7,4 +7,4 @@ images/left/6.jpg
 images/left/7.jpg 
 images/left/8.jpg 
 images/left/9.jpg 
-images/left/10.jpg
+images/left/10.jpg 
