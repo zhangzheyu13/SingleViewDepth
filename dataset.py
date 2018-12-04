@@ -10,7 +10,7 @@ from PIL import Image
 class KittiDataset(Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, root_dir='./images/train/2011_09_26', transform=None, H=160, W=608):
+    def __init__(self, root_dir='./images/train', transform=None, H=160, W=608):
         """
         Args:
             root_dir (string): Directory with all the images.
@@ -26,13 +26,15 @@ class KittiDataset(Dataset):
         self.right_img_list = []
         # scan the file paths
         for d in os.listdir(root_dir):
-            left_img_dir = os.path.join(root_dir, d, 'image_02', 'data')
-            for img_name in os.listdir(left_img_dir):
-                self.left_img_list.append(os.path.join(left_img_dir, img_name))
+            sub_dir = os.path.join(root_dir, d)
+            for sd in os.listdir(sub_dir):
+                left_img_dir = os.path.join(sub_dir, sd, 'image_02', 'data')
+                for img_name in os.listdir(left_img_dir):
+                    self.left_img_list.append(os.path.join(left_img_dir, img_name))
 
-            right_img_dir = os.path.join(root_dir, d, 'image_03', 'data')
-            for img_name in os.listdir(right_img_dir):
-                self.right_img_list.append(os.path.join(right_img_dir, img_name))
+                right_img_dir = os.path.join(sub_dir, sd, 'image_03', 'data')
+                for img_name in os.listdir(right_img_dir):
+                    self.right_img_list.append(os.path.join(right_img_dir, img_name))
 
         assert len(self.left_img_list) == len(self.right_img_list)
 

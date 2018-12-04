@@ -81,13 +81,13 @@ class ResNet(nn.Module):
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         # stage 1-4
-        self.stage1 = self.make_stage(block, 64, layers[0])
+        self.layer1 = self.make_stage(block, 64, layers[0])
         self.score_pool1 = conv1x1(256, 1)
-        self.stage2 = self.make_stage(block, 128, layers[1], stride=2)
+        self.layer2 = self.make_stage(block, 128, layers[1], stride=2)
         self.score_pool2 = conv1x1(512, 1)
-        self.stage3 = self.make_stage(block, 256, layers[2], stride=2)
+        self.layer3 = self.make_stage(block, 256, layers[2], stride=2)
         self.score_pool3 = conv1x1(1024, 1)
-        self.stage4 = self.make_stage(block, 512, layers[3], stride=2)
+        self.layer4 = self.make_stage(block, 512, layers[3], stride=2)
         self.score_pool4 = conv1x1(2048, 1)
 
         # learnable vertical flow
@@ -105,7 +105,7 @@ class ResNet(nn.Module):
         self.D_edge_x = edge_x.view((1,1,3,3))
         self.edge_x = torch.cat([self.D_edge_x]*3, dim=1)
 
-        # sobel y filetr
+        # sobel y filter
         edge_y = torch.Tensor([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])
         self.D_edge_y = edge_y.view((1,1,3,3))
         self.edge_y = torch.cat([self.D_edge_y]*3, dim=1)
@@ -114,9 +114,15 @@ class ResNet(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
+
+        nn.init.constant_(self.score_pool1.weight, 0)
+        nn.init.constant_(self.score_pool2.weight, 0)
+        nn.init.constant_(self.score_pool3.weight, 0)
+        nn.init.constant_(self.score_pool4.weight, 0)
 
 
     def make_stage(self, block, planes, blocks, stride=1):
@@ -147,13 +153,13 @@ class ResNet(nn.Module):
         x = self.relu(x)
         x = self.maxpool(x)
 
-        x = self.stage1(x)
+        x = self.layer1(x)
         score_pool1 = self.score_pool1(x)
-        x = self.stage2(x)
+        x = self.layer2(x)
         score_pool2 = self.score_pool2(x)
-        x = self.stage3(x)
+        x = self.layer3(x)
         score_pool3 = self.score_pool3(x)
-        x = self.stage4(x)
+        x = self.layer4(x)
         score_pool4 = self.score_pool4(x)
 
         fuse_pool3 = upsample(score_pool4) + score_pool3

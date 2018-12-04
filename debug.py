@@ -1,3 +1,7 @@
+'''
+test on some dummy data: img_left = img_right
+'''
+
 from __future__ import division
 import numpy as np
 import torch
@@ -35,7 +39,7 @@ for line in right_file.readlines():
     imgs.append(img)
 img_right = torch.stack(imgs)
 
-net = resnet50(pretrained=False)
+net = resnet50(pretrained=True)
 optimizer = optim.Adam(net.parameters(), lr=0.001, weight_decay=0.0001)
 
 num_epoch = 1000
@@ -45,7 +49,7 @@ for i in range(num_epoch):
 
     loss_recon, loss_smooth = net(img_left, img_right)
 
-    loss = loss_recon + loss_smooth
+    loss = loss_recon + 0.01 * loss_smooth
     loss.backward()
     optimizer.step()
 

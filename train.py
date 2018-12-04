@@ -37,7 +37,7 @@ for e in range(num_epoch):
 
         loss_recon, loss_smooth = net(batch['img_left'], batch['img_right'])
 
-        loss = loss_recon + loss_smooth
+        loss = loss_recon + 0.01 * loss_smooth
         loss.backward()
         optimizer.step()
 
