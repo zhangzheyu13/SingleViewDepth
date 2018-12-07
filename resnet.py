@@ -91,24 +91,24 @@ class ResNet(nn.Module):
         self.score_pool4 = conv1x1(2048, 1)
 
         # learnable vertical flow
-        self.v_flow = torch.zeros((1, H, W), requires_grad=True)
+        self.v_flow = nn.Parameter(torch.zeros((1, H, W)))
 
         # coordinate grid, normalized to [-1, 1] to fit into grid_sample
         coord_x = np.tile(range(W), (H, 1)) / ((W-1)/2) - 1
         coord_y = np.tile(range(H), (W, 1)).T / ((H-1)/2) - 1
         grid = np.stack([coord_x, coord_y])
         grid = np.transpose(grid, [1,2,0])
-        self.grid = torch.Tensor(grid)
+        self.grid = nn.Parameter(torch.Tensor(grid), requires_grad=False)
 
         # sobel x filter
         edge_x = torch.Tensor([[1, 0, -1], [2, 0, -2], [1, 0, -1]])
-        self.D_edge_x = edge_x.view((1,1,3,3))
-        self.edge_x = torch.cat([self.D_edge_x]*3, dim=1)
+        self.D_edge_x = nn.Parameter(edge_x.view((1,1,3,3)), requires_grad=False)
+        self.edge_x = nn.Parameter(torch.cat([self.D_edge_x]*3, dim=1), requires_grad=False)
 
         # sobel y filter
         edge_y = torch.Tensor([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])
-        self.D_edge_y = edge_y.view((1,1,3,3))
-        self.edge_y = torch.cat([self.D_edge_y]*3, dim=1)
+        self.D_edge_y = nn.Parameter(edge_y.view((1,1,3,3)), requires_grad=False)
+        self.edge_y = nn.Parameter(torch.cat([self.D_edge_y]*3, dim=1), requires_grad=False)
 
         # initialization
         for m in self.modules():
@@ -169,13 +169,13 @@ class ResNet(nn.Module):
         # disparity, D(x), aka. horizontal flow
         disparity = upsample(fuse_pool1, scale_factor=4)
         # normalize
-        disparity = disparity / ((self.W-1)/2)
+        h_flow = disparity / ((self.W-1)/2)
 
         # vertical flow
-        v = disparity * self.v_flow
+        v = h_flow * self.v_flow
 
         # warping transformation
-        trans = torch.cat([disparity, v], dim=1)
+        trans = torch.cat([h_flow, v], dim=1)
 
         grid_warp = self.grid + trans.permute(0,2,3,1)
 
@@ -187,14 +187,14 @@ class ResNet(nn.Module):
 
         # gradient of left image and disparity
         g_x = F.conv2d(img_left, self.edge_x)
-        D_g_x = F.conv2d(disparity, self.D_edge_x)
+        D_g_x = F.conv2d(h_flow, self.D_edge_x)
         g_y = F.conv2d(img_left, self.edge_y)
-        D_g_y = F.conv2d(disparity, self.D_edge_y)
+        D_g_y = F.conv2d(h_flow, self.D_edge_y)
         
         # smoothness loss
         loss_smooth = torch.sum(torch.abs(g_x * D_g_x)) / num_pairs + torch.sum(torch.abs(g_y * D_g_y)) / num_pairs
 
-        return loss_recon, loss_smooth
+        return loss_recon, loss_smooth, disparity
 
 
 def resnet50(pretrained=False, **kwargs):
