@@ -9,7 +9,7 @@ import torch.optim as optim
 from torchvision import transforms
 from dataset import KittiDataset
 from torch.utils.data import Dataset, DataLoader
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import os
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -33,13 +33,13 @@ depth_transform = transforms.Compose([
 
 
 kitti_train = KittiDataset(data_transform=data_transform)
-train_dataloader = DataLoader(kitti_train, batch_size=16, shuffle=True, **kwargs)
+train_dataloader = DataLoader(kitti_train, batch_size=64, shuffle=True, **kwargs)
 kitti_test = KittiDataset(root_dir='../images/test', train=False, data_transform=data_transform, depth_transform=depth_transform)
 test_dataloader = DataLoader(kitti_test, batch_size=1, shuffle=False, **kwargs)
 print(len(kitti_test))
 
 net = resnet50(pretrained=True).to(device)
-net.load_state_dict(torch.load('../images/models/best_epoch_23.pth'))
+#net.load_state_dict(torch.load('../images/models/best_epoch_23.pth'))
 
 optimizer = optim.Adam(net.parameters(), lr=0.0001, weight_decay=0.0001)
 
@@ -48,7 +48,7 @@ num_epoch = 100
 best_loss = float('inf')
 for e in range(num_epoch):
 
-    '''# training
+    # training
     net.train()
     train_loss = []
     for i, batch in enumerate(train_dataloader):
@@ -73,10 +73,10 @@ for e in range(num_epoch):
     if avg_loss < best_loss:
             best_loss = avg_loss
             torch.save(net.state_dict(), '../images/models/best_epoch_{}.pth'.format(e))
-            print('model saved...')'''
+            print('model saved...')
 
 
-    # validation
+    '''# validation
     for i, batch in enumerate(test_dataloader):
         net.eval()
         with torch.no_grad():
@@ -108,6 +108,5 @@ for e in range(num_epoch):
             #print(correct)
             #print(torch.sum(valid_mask))
             accuracy = correct / torch.sum(valid_mask).item()
-            print('epoch [{}], image [{}], accuracy {}'.format(e, i, accuracy))
+            print('epoch [{}], image [{}], accuracy {}'.format(e, i, accuracy))'''
         
-    break
