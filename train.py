@@ -101,7 +101,7 @@ for e in range(args.epochs):
 
         if avg_loss < best_loss:
                 best_loss = avg_loss
-                torch.save(net.state_dict(), '../images/models/{}_best_epoch_{}.pth'.format(model_name, e))
+                torch.save(net.state_dict(), '../images/models/{}_best_epoch_{}.pth'.format(args.model_name, e))
                 print('model saved...')
 
     else:
