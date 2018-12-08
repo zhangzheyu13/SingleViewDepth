@@ -82,8 +82,8 @@ for e in range(num_epoch):
         with torch.no_grad():
             img_left = batch['img_left'].to(device)
             img_right = batch['img_right'].to(device)
-            depth_left = batch['depth_left'].to(device)
-            valid_mask = (depth_left > 0)
+            #depth_left = batch['depth_left'].to(device)
+            #valid_mask = (depth_left > 0)
             #print(torch.max(depth_left))
             #print(type(depth_left))
             _, _, disparity = net(img_left, img_right)
@@ -96,7 +96,7 @@ for e in range(num_epoch):
             plt.imshow(img_left_2show)
             plt.imsave(os.path.join('../images/output', 'img_'+str(i)+'_test_output.png'), img_left_2show)
             
-            scale = 1242
+            '''scale = 1242
             depth = 389.6304 / (scale * disparity)
             #print(torch.max(depth), torch.min(depth))
             #print(torch.max(depth_left), torch.min(depth_left))
@@ -108,6 +108,6 @@ for e in range(num_epoch):
             #print(correct)
             #print(torch.sum(valid_mask))
             accuracy = correct / torch.sum(valid_mask).item()
-            print('epoch [{}], image [{}], accuracy {}'.format(e, i, accuracy))
+            print('epoch [{}], image [{}], accuracy {}'.format(e, i, accuracy))'''
         
     break

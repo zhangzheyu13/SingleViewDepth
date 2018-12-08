@@ -10,7 +10,7 @@ from read_depth import depth_read
 class KittiDataset(Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, root_dir='../images/train', train=True, data_transform=None, depth_transform=None, H=160, W=608):
+    def __init__(self, root_dir='../images/train', train=True, use_depth=False, data_transform=None, depth_transform=None, H=160, W=608):
         """
         Args:
             root_dir (string): Directory with all the images.
@@ -19,6 +19,7 @@ class KittiDataset(Dataset):
         """
         self.root_dir = root_dir
         self.train = train
+        self.use_depth = use_depth
         self.data_transform = data_transform
         self.depth_transform = depth_transform
         self.H = H
@@ -33,7 +34,7 @@ class KittiDataset(Dataset):
             for sd in os.listdir(sub_dir):
                 left_img_dir = os.path.join(sub_dir, sd, 'image_02', 'data')
                 for img_name in os.listdir(left_img_dir):
-                    if not self.train:
+                    if self.use_depth:
                         depth_dir = os.path.join('../images/test_depth', sd, 'proj_depth', 'groundtruth', 'image_02', img_name)
                         if not os.path.isfile(depth_dir):
                             continue
@@ -42,7 +43,7 @@ class KittiDataset(Dataset):
 
                 right_img_dir = os.path.join(sub_dir, sd, 'image_03', 'data')
                 for img_name in os.listdir(right_img_dir):
-                    if not self.train:
+                    if self.use_depth:
                         depth_dir = os.path.join('../images/test_depth', sd, 'proj_depth', 'groundtruth', 'image_02', img_name)
                         if not os.path.isfile(depth_dir):
                             continue
@@ -67,7 +68,7 @@ class KittiDataset(Dataset):
             img_left = self.data_transform(img_left)
             img_right = self.data_transform(img_right)
 
-        if not self.train:
+        if self.use_depth:
             depth_left = depth_read(self.left_depth_list[idx])
             if self.depth_transform:
                 depth_left = self.depth_transform(depth_left)
