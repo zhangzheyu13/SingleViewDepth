@@ -2,15 +2,15 @@ from __future__ import print_function, division
 import os
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 from PIL import Image
+from read_depth import depth_read
 
 class KittiDataset(Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, root_dir='./images/train', train=True, data_transform=None, depth_transform=None, H=160, W=608):
+    def __init__(self, root_dir='../images/train', train=True, data_transform=None, depth_transform=None, H=160, W=608):
         """
         Args:
             root_dir (string): Directory with all the images.
@@ -34,7 +34,7 @@ class KittiDataset(Dataset):
                 left_img_dir = os.path.join(sub_dir, sd, 'image_02', 'data')
                 for img_name in os.listdir(left_img_dir):
                     if not self.train:
-                        depth_dir = os.path.join('./images/test_depth', sd, 'proj_depth', 'groundtruth', 'image_02', img_name)
+                        depth_dir = os.path.join('../images/test_depth', sd, 'proj_depth', 'groundtruth', 'image_02', img_name)
                         if not os.path.isfile(depth_dir):
                             continue
                         self.left_depth_list.append(depth_dir)
@@ -43,7 +43,7 @@ class KittiDataset(Dataset):
                 right_img_dir = os.path.join(sub_dir, sd, 'image_03', 'data')
                 for img_name in os.listdir(right_img_dir):
                     if not self.train:
-                        depth_dir = os.path.join('./images/test_depth', sd, 'proj_depth', 'groundtruth', 'image_02', img_name)
+                        depth_dir = os.path.join('../images/test_depth', sd, 'proj_depth', 'groundtruth', 'image_02', img_name)
                         if not os.path.isfile(depth_dir):
                             continue
                     self.right_img_list.append(os.path.join(right_img_dir, img_name))
@@ -54,6 +54,8 @@ class KittiDataset(Dataset):
 
 
     def __len__(self):
+        if not self.train:
+            return 10
         return len(self.left_img_list)
 
 

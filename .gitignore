@@ -1,3 +1,5 @@
 images/train/
 images/test/
+images/depth/
+images/test_depth/
 *.pyc

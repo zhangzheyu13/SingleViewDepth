@@ -119,10 +119,10 @@ class ResNet(nn.Module):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
-        nn.init.constant_(self.score_pool1.weight, 0)
-        nn.init.constant_(self.score_pool2.weight, 0)
-        nn.init.constant_(self.score_pool3.weight, 0)
-        nn.init.constant_(self.score_pool4.weight, 0)
+        #nn.init.constant_(self.score_pool1.weight, 0)
+        #nn.init.constant_(self.score_pool2.weight, 0)
+        #nn.init.constant_(self.score_pool3.weight, 0)
+        #nn.init.constant_(self.score_pool4.weight, 0)
 
 
     def make_stage(self, block, planes, blocks, stride=1):
@@ -169,7 +169,7 @@ class ResNet(nn.Module):
         # disparity, D(x), aka. horizontal flow
         disparity = upsample(fuse_pool1, scale_factor=4)
         # normalize
-        h_flow = disparity / ((self.W-1)/2)
+        h_flow = disparity
 
         # vertical flow
         v = h_flow * self.v_flow
@@ -183,7 +183,7 @@ class ResNet(nn.Module):
         img_warp = F.grid_sample(img_right, grid_warp)
 
         # reconstruction loss
-        loss_recon = torch.sum(torch.abs(img_warp - img_left)) / num_pairs
+        loss_recon = torch.sum((img_warp - img_left)**2) / num_pairs
 
         # gradient of left image and disparity
         g_x = F.conv2d(img_left, self.edge_x)
@@ -192,7 +192,7 @@ class ResNet(nn.Module):
         D_g_y = F.conv2d(h_flow, self.D_edge_y)
         
         # smoothness loss
-        loss_smooth = torch.sum(torch.abs(g_x * D_g_x)) / num_pairs + torch.sum(torch.abs(g_y * D_g_y)) / num_pairs
+        loss_smooth = torch.sum((g_x * D_g_x)**2) / num_pairs + torch.sum((g_y * D_g_y)**2) / num_pairs
 
         return loss_recon, loss_smooth, disparity
 
@@ -209,6 +209,11 @@ def resnet50(pretrained=False, **kwargs):
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
         model_dict.update(pretrained_dict) 
         model.load_state_dict(pretrained_dict, strict=False)
+
+    nn.init.constant_(model.score_pool1.weight, 0)
+    nn.init.constant_(model.score_pool2.weight, 0)
+    nn.init.constant_(model.score_pool3.weight, 0)
+    nn.init.constant_(model.score_pool4.weight, 0)
 
     return model
 
