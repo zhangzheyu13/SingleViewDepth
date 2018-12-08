@@ -9,7 +9,7 @@ import torch.optim as optim
 from torchvision import transforms
 from dataset import KittiDataset
 from torch.utils.data import Dataset, DataLoader
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import os
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
