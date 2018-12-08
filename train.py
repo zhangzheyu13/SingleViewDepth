@@ -97,7 +97,7 @@ for e in range(args.epochs):
 
         avg_loss = np.mean(train_loss)
         print('epoch [{}], avg loss {}'.format(e, avg_loss))
-        logger.scalar_summary('train/avg_loss', avg_loss, self.cur_epoch)
+        logger.scalar_summary('train/avg_loss', avg_loss, e)
 
         if avg_loss < best_loss:
                 best_loss = avg_loss
