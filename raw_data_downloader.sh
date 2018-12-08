@@ -1,6 +1,6 @@
 #!/bin/bash
 
-files=(2011_09_26_calib.zip
+files=(
 2011_09_26_drive_0001
 2011_09_26_drive_0002
 2011_09_26_drive_0005
