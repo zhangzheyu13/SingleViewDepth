@@ -66,7 +66,7 @@ class Bottleneck(nn.Module):
 
 class ResNet(nn.Module):
 
-    def __init__(self, block, layers, H=160, W=608):
+    def __init__(self, block, layers, H=160, W=608, use_deconv=True):
         super(ResNet, self).__init__()
 
         self.H = H
@@ -188,11 +188,13 @@ class ResNet(nn.Module):
         # gradient of left image and disparity
         g_x = F.conv2d(img_left, self.edge_x)
         D_g_x = F.conv2d(h_flow, self.D_edge_x)
+        exp_D_g_x = torch.exp(-D_g_x)
         g_y = F.conv2d(img_left, self.edge_y)
         D_g_y = F.conv2d(h_flow, self.D_edge_y)
+        exp_D_g_y = torch.exp(-D_g_y)
         
         # smoothness loss
-        loss_smooth = torch.sum((g_x * D_g_x)**2) / num_pairs + torch.sum((g_y * D_g_y)**2) / num_pairs
+        loss_smooth = torch.sum(torch.abs(g_x * exp_D_g_x)) / num_pairs + torch.sum(torch.abs(g_y * exp_D_g_y)) / num_pairs
 
         return loss_recon, loss_smooth, disparity
 

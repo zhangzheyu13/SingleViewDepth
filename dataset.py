@@ -10,7 +10,7 @@ from read_depth import depth_read
 class KittiDataset(Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, root_dir='../images/train', train=True, use_depth=False, data_transform=None, depth_transform=None, H=160, W=608):
+    def __init__(self, root_dir='../images/train', train=True, use_depth=False, data_transform=None, depth_transform=None, H=160, W=608, num_test=None):
         """
         Args:
             root_dir (string): Directory with all the images.
@@ -24,6 +24,7 @@ class KittiDataset(Dataset):
         self.depth_transform = depth_transform
         self.H = H
         self.W = W
+        self.num_test = num_test
 
         self.left_img_list = []
         self.right_img_list = []
@@ -56,7 +57,7 @@ class KittiDataset(Dataset):
 
     def __len__(self):
         if not self.train:
-            return 10
+            return self.num_test
         return len(self.left_img_list)
 
 
@@ -75,6 +76,6 @@ class KittiDataset(Dataset):
 
             sample = {'img_left': img_left, 'img_right': img_right, 'depth_left': depth_left}
         else:
-            sample = {'img_left': img_left, 'img_right': img_right}
+            sample = {'img_left': img_left, 'img_right': img_right, 'img_left_dir': self.left_img_list[idx]}
 
         return sample
