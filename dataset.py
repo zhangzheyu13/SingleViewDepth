@@ -10,7 +10,7 @@ from read_depth import depth_read
 class KittiDataset(Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, root_dir='../images/train', train=True, use_depth=False, data_transform=None, depth_transform=None, H=160, W=608, num_test=None):
+    def __init__(self, root_dir='../images/train', train=True, use_depth=False, data_transform=None, depth_transform=None, H=320, W=1216, num_test=None):
         """
         Args:
             root_dir (string): Directory with all the images.

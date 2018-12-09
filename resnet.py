@@ -69,7 +69,7 @@ class Bottleneck(nn.Module):
 
 class ResNet(nn.Module):
 
-    def __init__(self, block, layers, H=160, W=608, use_deconv=False):
+    def __init__(self, block, layers, H=320, W=1216, use_deconv=False):
         super(ResNet, self).__init__()
 
         self.H = H
@@ -78,10 +78,10 @@ class ResNet(nn.Module):
         self.inplanes = 64
         
         # first conv layer
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=1, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
 
         # stage 1-4
         self.layer1 = self.make_stage(block, 64, layers[0])
@@ -191,7 +191,7 @@ class ResNet(nn.Module):
         fuse_pool1 = upsample(fuse_pool2, conv_layer=self.deconv2) + score_pool1
 
         # disparity, D(x), aka. horizontal flow
-        disparity = upsample(fuse_pool1, conv_layer=self.deconv1, scale_factor=4)
+        disparity = upsample(fuse_pool1, conv_layer=self.deconv1, scale_factor=2)
         # normalize
         h_flow = disparity
 

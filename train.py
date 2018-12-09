@@ -29,6 +29,7 @@ def parse_arguments():
     parser.add_argument('--model_dir', dest='model_dir', type=str, default='', help="model dir")
     parser.add_argument('--model_name', dest='model_name', type=str, default='my_model', help="model name")
     parser.add_argument('--num_test', dest='num_test', type=int, default=10)
+    parser.add_argument('--down_scale', dest='down_scale', type=float, default=1, help="down scale")
 
     return parser.parse_args()
 
@@ -39,8 +40,8 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
 
 # load data
-H = 160
-W = 608
+H = int(320 / args.down_scale)
+W = int(1216 / args.down_scale)
 data_transform = transforms.Compose([
         transforms.Resize(size=(H, W)),
         transforms.ToTensor(),
@@ -55,13 +56,13 @@ depth_transform = transforms.Compose([
     ])
 
 
-kitti_train = KittiDataset(data_transform=data_transform)
+kitti_train = KittiDataset(data_transform=data_transform, H=H, W=W)
 train_dataloader = DataLoader(kitti_train, batch_size=args.batch_size, shuffle=True, **kwargs)
-kitti_test = KittiDataset(root_dir='../images/test', train=False, data_transform=data_transform, depth_transform=depth_transform, num_test=args.num_test)
+kitti_test = KittiDataset(root_dir='../images/test', train=False, data_transform=data_transform, depth_transform=depth_transform, num_test=args.num_test, H=H, W=W)
 test_dataloader = DataLoader(kitti_test, batch_size=1, shuffle=False, **kwargs)
 print(len(kitti_test))
 
-net = resnet50(pretrained=True, use_deconv=args.use_deconv).to(device)
+net = resnet50(pretrained=True, use_deconv=args.use_deconv, H=H, W=W).to(device)
 if args.model_dir is not '':
     net.load_state_dict(torch.load(args.model_dir))
 
@@ -120,7 +121,7 @@ for e in range(args.epochs):
             with torch.no_grad():
                 img_left = batch['img_left'].to(device)
                 img_right = batch['img_right'].to(device)
-                if use_depth:
+                if args.use_depth:
                     depth_left = batch['depth_left'].to(device)
                     valid_mask = (depth_left > 0)
                 #print(torch.max(depth_left))
@@ -133,7 +134,7 @@ for e in range(args.epochs):
                 img_left_2show = np.transpose(img_left.squeeze().to('cpu').numpy(), (1,2,0))
                 plt.imsave(os.path.join('../images/output', 'img_'+str(i)+'_test_output.png'), img_left_2show)
                 
-                if use_depth:
+                if args.use_depth:
                     scale = 1242
                     depth = 389.6304 / (scale * disparity)
                     #print(torch.max(depth), torch.min(depth))
