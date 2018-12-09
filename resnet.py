@@ -23,7 +23,10 @@ def conv1x1(in_planes, out_planes, stride=1):
 
 def upsample(tensor, scale_factor=2, conv_layer=None):
     """upsampling by factor"""
-    return conv_layer(F.interpolate(tensor, scale_factor=scale_factor, mode='bilinear', align_corners=True))
+    if conv_layer:
+        return conv_layer(F.interpolate(tensor, scale_factor=scale_factor, mode='bilinear', align_corners=True))
+    else:
+        return F.interpolate(tensor, scale_factor=scale_factor, mode='bilinear', align_corners=True)
 
 
 class Bottleneck(nn.Module):
