@@ -186,10 +186,10 @@ class ResNet(nn.Module):
         loss_recon = torch.sum((img_warp - img_left)**2) / num_pairs
 
         # gradient of left image and disparity
-        g_x = F.conv2d(img_left, self.edge_x)
+        g_x = torch.abs(F.conv2d(img_left, self.edge_x))
         D_g_x = F.conv2d(h_flow, self.D_edge_x)
         exp_g_x = torch.exp(-g_x)
-        g_y = F.conv2d(img_left, self.edge_y)
+        g_y = torch.abs(F.conv2d(img_left, self.edge_y))
         D_g_y = F.conv2d(h_flow, self.D_edge_y)
         exp_g_y = torch.exp(-g_y)
         
