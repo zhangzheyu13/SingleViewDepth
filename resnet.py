@@ -21,7 +21,7 @@ def conv1x1(in_planes, out_planes, stride=1):
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 
-def upsample(tensor, scale_factor=2):
+def upsample(tensor, scale_factor=2, conv_layer=None):
     """upsampling by factor"""
     return F.interpolate(tensor, scale_factor=scale_factor, mode='bilinear', align_corners=True)
 
@@ -188,13 +188,13 @@ class ResNet(nn.Module):
         # gradient of left image and disparity
         g_x = F.conv2d(img_left, self.edge_x)
         D_g_x = F.conv2d(h_flow, self.D_edge_x)
-        exp_D_g_x = torch.exp(-D_g_x)
+        exp_g_x = torch.exp(-g_x)
         g_y = F.conv2d(img_left, self.edge_y)
         D_g_y = F.conv2d(h_flow, self.D_edge_y)
-        exp_D_g_y = torch.exp(-D_g_y)
+        exp_g_y = torch.exp(-g_y)
         
         # smoothness loss
-        loss_smooth = torch.sum(torch.abs(g_x * exp_D_g_x)) / num_pairs + torch.sum(torch.abs(g_y * exp_D_g_y)) / num_pairs
+        loss_smooth = torch.sum(torch.abs(D_g_x * exp_g_x)) / num_pairs + torch.sum(torch.abs(D_g_y * exp_g_y)) / num_pairs
 
         return loss_recon, loss_smooth, disparity
 
