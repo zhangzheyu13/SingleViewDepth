@@ -102,6 +102,7 @@ for e in range(args.epochs):
 
         avg_loss_recon = np.mean(train_loss_recon)
         avg_loss_smooth = np.mean(train_loss_smooth)
+        avg_loss = np.mean(train_loss)
         print('epoch [{}], avg loss {}'.format(e, avg_loss))
         logger.scalar_summary('train/avg_loss_recon', avg_loss_recon, e)
         logger.scalar_summary('train/avg_loss_smooth', avg_loss_smooth, e)
