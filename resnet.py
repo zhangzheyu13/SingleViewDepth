@@ -191,7 +191,7 @@ class ResNet(nn.Module):
         fuse_pool1 = upsample(fuse_pool2, conv_layer=self.deconv2) + score_pool1
 
         # disparity, D(x), aka. horizontal flow
-        disparity = upsample(fuse_pool1, conv_layer=self.deconv1, scale_factor=2)
+        disparity = upsample(fuse_pool1, conv_layer=self.deconv1)
         # normalize
         h_flow = disparity
 
@@ -207,7 +207,9 @@ class ResNet(nn.Module):
         img_warp = F.grid_sample(img_right, grid_warp)
 
         # reconstruction loss
-        loss_recon = torch.mean((img_warp - img_left)**2)
+        loss_recon = torch.sum((img_warp - img_left)**2) / num_pairs
+        g_x_warp = torch.abs(F.conv2d(img_warp, self.edge_x))
+        g_y_warp = torch.abs(F.conv2d(img_warp, self.edge_y))
 
         # gradient of left image and disparity
         g_x = torch.abs(F.conv2d(img_left, self.edge_x))
@@ -216,11 +218,14 @@ class ResNet(nn.Module):
         g_y = torch.abs(F.conv2d(img_left, self.edge_y))
         D_g_y = F.conv2d(h_flow, self.D_edge_y)
         exp_g_y = torch.exp(-g_y)
+
+        # recon gradient loss
+        loss_grad = torch.sum((g_x_warp - g_x)**2) / num_pairs + torch.sum((g_y_warp - g_y)**2) / num_pairs
         
         # smoothness loss
-        loss_smooth = torch.mean(torch.abs(D_g_x * exp_g_x)) + torch.mean(torch.abs(D_g_y * exp_g_y))
+        loss_smooth = torch.sum(torch.abs(D_g_x * exp_g_x)) / num_pairs + torch.sum(torch.abs(D_g_y * exp_g_y)) / num_pairs
 
-        return loss_recon, loss_smooth, disparity
+        return loss_recon, loss_smooth, loss_grad, disparity
 
 
 def resnet50(pretrained=False, **kwargs):

@@ -82,6 +82,7 @@ for e in range(args.epochs):
         net.train()
         train_loss_recon = []
         train_loss_smooth = []
+        train_loss_grad = []
         train_loss = []
         for i, batch in enumerate(train_dataloader):
             img_left = batch['img_left'].to(device)
@@ -89,24 +90,27 @@ for e in range(args.epochs):
 
             optimizer.zero_grad()
 
-            loss_recon, loss_smooth, _ = net(img_left, img_right)
+            loss_recon, loss_smooth, loss_grad, _ = net(img_left, img_right)
 
-            loss = loss_recon + 0.01 * loss_smooth
+            loss = loss_recon + 0.01 * loss_smooth + 0.01 * loss_grad
             loss.backward()
             optimizer.step()
 
             if i % args.log_interval == 0:
-                print('epoch [{}], iter [{}], loss recon {}, loss smooth {}'.format(e, i, loss_recon.item(), loss_smooth.item()))
+                print('epoch [{}], iter [{}], loss recon {}, loss smooth {}, loss grad {}'.format(e, i, loss_recon.item(), loss_smooth.item(), loss_grad.item()))
             train_loss_recon.append(loss_recon.item())
             train_loss_smooth.append(loss_smooth.item())
+            train_loss_grad.append(loss_grad.item())
             train_loss.append(loss.item())
 
         avg_loss_recon = np.mean(train_loss_recon)
         avg_loss_smooth = np.mean(train_loss_smooth)
+        avg_loss_recon = np.mean(train_loss_grad)
         avg_loss = np.mean(train_loss)
         print('epoch [{}], avg loss {}'.format(e, avg_loss))
         logger.scalar_summary('train/avg_loss_recon', avg_loss_recon, e)
         logger.scalar_summary('train/avg_loss_smooth', avg_loss_smooth, e)
+        logger.scalar_summary('train/avg_loss_grad', avg_loss_grad, e)
         logger.scalar_summary('train/avg_loss', avg_loss, e)
 
         if avg_loss < best_loss:
