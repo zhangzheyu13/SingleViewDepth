@@ -207,7 +207,7 @@ class ResNet(nn.Module):
         img_warp = F.grid_sample(img_right, grid_warp)
 
         # reconstruction loss
-        loss_recon = torch.mean((img_warp - img_left)**2) / num_pairs
+        loss_recon = torch.mean((img_warp - img_left)**2)
 
         # gradient of left image and disparity
         g_x = torch.abs(F.conv2d(img_left, self.edge_x))
@@ -218,7 +218,7 @@ class ResNet(nn.Module):
         exp_g_y = torch.exp(-g_y)
         
         # smoothness loss
-        loss_smooth = torch.mean(torch.abs(D_g_x * exp_g_x)) / num_pairs + torch.mean(torch.abs(D_g_y * exp_g_y)) / num_pairs
+        loss_smooth = torch.mean(torch.abs(D_g_x * exp_g_x)) + torch.mean(torch.abs(D_g_y * exp_g_y))
 
         return loss_recon, loss_smooth, disparity
 
