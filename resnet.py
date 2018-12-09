@@ -85,22 +85,34 @@ class ResNet(nn.Module):
 
         # stage 1-4
         self.layer1 = self.make_stage(block, 64, layers[0])
-        self.score_pool1 = conv1x1(256, 1)
         
         self.layer2 = self.make_stage(block, 128, layers[1], stride=2)
-        self.score_pool2 = conv1x1(512, 1)
         
         self.layer3 = self.make_stage(block, 256, layers[2], stride=2)
-        self.score_pool3 = conv1x1(1024, 1)
         
         self.layer4 = self.make_stage(block, 512, layers[3], stride=2)
-        self.score_pool4 = conv1x1(2048, 1)
+        
 
         if use_deconv:
-            self.deconv1 = conv1x1(256, 1)
-            self.deconv2 = conv1x1(512, 1)
-            self.deconv3 = conv1x1(1024, 1)
-            self.deconv4 = conv1x1(2048, 1)
+            self.score_pool1 = conv1x1(256, 8)
+            self.score_pool2 = conv1x1(512, 16)
+            self.score_pool3 = conv1x1(1024, 32)
+            self.score_pool4 = conv1x1(2048, 64)
+
+            self.deconv1 = conv1x1(8, 1)
+            self.deconv2 = conv1x1(16, 1)
+            self.deconv3 = conv1x1(32, 1)
+            self.deconv4 = conv1x1(64, 1)
+        else:
+            self.score_pool1 = conv1x1(256, 1)
+            self.score_pool2 = conv1x1(512, 1)
+            self.score_pool3 = conv1x1(1024, 1)
+            self.score_pool4 = conv1x1(2048, 1)
+
+            self.deconv1 = None
+            self.deconv2 = None
+            self.deconv3 = None
+            self.deconv4 = None
 
         # learnable vertical flow
         self.v_flow = nn.Parameter(torch.zeros((1, H, W)))
@@ -174,12 +186,12 @@ class ResNet(nn.Module):
         x = self.layer4(x)
         score_pool4 = self.score_pool4(x)
 
-        fuse_pool3 = upsample(score_pool4) + score_pool3
-        fuse_pool2 = upsample(fuse_pool3) + score_pool2
-        fuse_pool1 = upsample(fuse_pool2) + score_pool1
+        fuse_pool3 = upsample(score_pool4, conv_layer=self.deconv4) + score_pool3
+        fuse_pool2 = upsample(fuse_pool3, conv_layer=self.deconv3) + score_pool2
+        fuse_pool1 = upsample(fuse_pool2, conv_layer=self.deconv2) + score_pool1
 
         # disparity, D(x), aka. horizontal flow
-        disparity = upsample(fuse_pool1, scale_factor=4)
+        disparity = upsample(fuse_pool1, conv_layer=self.deconv1, scale_factor=4)
         # normalize
         h_flow = disparity
 

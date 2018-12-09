@@ -25,6 +25,7 @@ def parse_arguments():
     parser.add_argument('--log_interval', dest='log_interval', type=int, default=10, help="log interval")
     parser.add_argument('--eval', action='store_true', help="evaluation mode")
     parser.add_argument('--use_depth', action='store_true', help="use depth")
+    parser.add_argument('--use_deconv', action='store_true', help="use deconv")
     parser.add_argument('--model_dir', dest='model_dir', type=str, default='', help="model dir")
     parser.add_argument('--model_name', dest='model_name', type=str, default='my_model', help="model name")
     parser.add_argument('--num_test', dest='num_test', type=int, default=10)
@@ -60,7 +61,7 @@ kitti_test = KittiDataset(root_dir='../images/test', train=False, data_transform
 test_dataloader = DataLoader(kitti_test, batch_size=1, shuffle=False, **kwargs)
 print(len(kitti_test))
 
-net = resnet50(pretrained=True).to(device)
+net = resnet50(pretrained=True, use_deconv=args.use_deconv).to(device)
 if args.model_dir is not '':
     net.load_state_dict(torch.load(args.model_dir))
 
@@ -78,6 +79,8 @@ for e in range(args.epochs):
     # training
     if not args.eval:
         net.train()
+        train_loss_recon = []
+        train_loss_smooth = []
         train_loss = []
         for i, batch in enumerate(train_dataloader):
             img_left = batch['img_left'].to(device)
@@ -93,10 +96,15 @@ for e in range(args.epochs):
 
             if i % args.log_interval == 0:
                 print('epoch [{}], iter [{}], loss recon {}, loss smooth {}'.format(e, i, loss_recon.item(), loss_smooth.item()))
+            train_loss_recon.append(loss_recon.item())
+            train_loss_smooth.append(loss_smooth.item())
             train_loss.append(loss.item())
 
-        avg_loss = np.mean(train_loss)
+        avg_loss_recon = np.mean(train_loss_recon)
+        avg_loss_smooth = np.mean(train_loss_smooth)
         print('epoch [{}], avg loss {}'.format(e, avg_loss))
+        logger.scalar_summary('train/avg_loss_recon', avg_loss_recon, e)
+        logger.scalar_summary('train/avg_loss_smooth', avg_loss_smooth, e)
         logger.scalar_summary('train/avg_loss', avg_loss, e)
 
         if avg_loss < best_loss:
